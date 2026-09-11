@@ -1,0 +1,9 @@
+/.build/
+/target/
+/dist/
+/benchmarks/results/
+/examples/drupal/app/*
+!/examples/drupal/app/composer.json
+!/examples/drupal/app/composer.lock
+__pycache__/
+*.pyc

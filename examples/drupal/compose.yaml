@@ -1,0 +1,46 @@
+services:
+  runtime:
+    image: polychrome-drupal:local
+    build:
+      context: ../..
+      dockerfile: examples/drupal/Dockerfile
+      target: application
+    volumes:
+      - files:/app/web/sites/default/files
+    depends_on:
+      database:
+        condition: service_healthy
+    stop_grace_period: 35s
+
+  web:
+    image: polychrome-drupal-web:local
+    build:
+      context: ../..
+      dockerfile: examples/drupal/Dockerfile
+      target: web
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - files:/app/web/sites/default/files:ro
+    depends_on:
+      - runtime
+
+  database:
+    image: mariadb:11.4
+    user: mysql
+    environment:
+      MARIADB_DATABASE: drupal
+      MARIADB_USER: drupal
+      MARIADB_PASSWORD: polychrome-example
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  files:
+  database:

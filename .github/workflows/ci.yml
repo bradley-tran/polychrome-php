@@ -1,0 +1,56 @@
+name: Build and validate
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitize: [0, 1]
+    env:
+      SANITIZE: ${{ matrix.sanitize }}
+      ASAN_OPTIONS: detect_leaks=0:abort_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+      USE_ZEND_ALLOC: 0
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf bison re2c pkg-config libxml2-dev libsqlite3-dev libssl-dev libcurl4-openssl-dev libonig-dev libicu-dev libzip-dev libpng-dev libjpeg-dev libwebp-dev zlib1g-dev
+      - name: Rust checks
+        run: |
+          rustup show
+          cargo fmt --all --check
+          cargo test --locked
+          cargo clippy --all-targets --locked -- -D warnings
+      - name: Build matching SAPI, CLI and FPM
+        run: ./scripts/build.sh
+      - name: Preload and FastCGI integration
+        run: |
+          dist/bin/php tests/preload.php
+          python3 tests/integration.py
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: native-logs-${{ matrix.sanitize }}
+          path: .build/*.log
+
+  drupal:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build runtime and Drupal fixture
+        run: |
+          docker build -t polychrome:local .
+          docker compose -p polychrome-ci -f examples/drupal/compose.yaml build
+          docker compose -p polychrome-ci -f examples/drupal/compose.yaml up -d --wait
+      - name: Install Drupal and exercise browser workflows
+        run: ./scripts/test-drupal.sh polychrome-ci
+      - name: Logs and cleanup
+        if: always()
+        run: |
+          docker compose -p polychrome-ci -f examples/drupal/compose.yaml logs --no-color
+          docker compose -p polychrome-ci -f examples/drupal/compose.yaml down -v

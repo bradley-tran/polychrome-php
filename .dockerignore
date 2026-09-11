@@ -1,0 +1,8 @@
+.git
+.build
+target
+dist
+examples/drupal/app/vendor
+examples/drupal/app/web
+benchmarks/results
+**/__pycache__

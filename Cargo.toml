@@ -1,0 +1,18 @@
+[package]
+name = "polychrome-php"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-3-Clause"
+description = "A preloaded, one-request-per-process PHP runtime"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+libc = "=0.2.175"
+
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"

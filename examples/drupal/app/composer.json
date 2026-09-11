@@ -1,0 +1,28 @@
+{
+    "name": "polychrome/drupal-example",
+    "description": "Locked Drupal 11 fixture for Polychrome integration and benchmarks",
+    "type": "project",
+    "license": "BSD-3-Clause",
+    "repositories": [{"type": "composer", "url": "https://packages.drupal.org/8"}],
+    "require": {
+        "php": "~8.5.0",
+        "composer/installers": "^2.3",
+        "drupal/core-recommended": "~11.4.0",
+        "drupal/core-composer-scaffold": "~11.4.0",
+        "drush/drush": "^13.6"
+    },
+    "config": {
+        "allow-plugins": {"composer/installers": true, "drupal/core-composer-scaffold": true, "symfony/runtime": true},
+        "sort-packages": true,
+        "platform": {"php": "8.5.10"}
+    },
+    "extra": {
+        "drupal-scaffold": {"locations": {"web-root": "web/"}},
+        "installer-paths": {
+            "web/core": ["type:drupal-core"],
+            "web/modules/contrib/{$name}": ["type:drupal-module"],
+            "web/themes/contrib/{$name}": ["type:drupal-theme"],
+            "web/profiles/contrib/{$name}": ["type:drupal-profile"]
+        }
+    }
+}
